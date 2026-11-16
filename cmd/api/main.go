@@ -59,7 +59,7 @@ func run() error {
 
 	log.Info("PostgreSQL connection pool initialized")
 
-	if err := serve(ctx, cfg, log); err != nil {
+	if err := serve(ctx, cfg, log, pool); err != nil {
 		log.Error("API server failed", "error", err)
 		return err
 	}
@@ -67,10 +67,15 @@ func run() error {
 	return nil
 }
 
-func newHTTPServer(cfg config.Config) *http.Server {
+func newHTTPServer(cfg config.Config, pool databasePinger) *http.Server {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("GET /health", healthHandler())
+	mux.HandleFunc("GET /ready", readinessHandler(pool))
+
 	return &http.Server{
 		Addr:              fmt.Sprintf(":%d", cfg.App.Port),
-		Handler:           http.NewServeMux(),
+		Handler:           mux,
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
@@ -80,8 +85,9 @@ func serve(
 	ctx context.Context,
 	cfg config.Config,
 	log *slog.Logger,
+	pool databasePinger,
 ) error {
-	server := newHTTPServer(cfg)
+	server := newHTTPServer(cfg, pool)
 
 	listner, err := net.Listen("tcp", server.Addr)
 	if err != nil {

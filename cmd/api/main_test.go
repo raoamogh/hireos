@@ -14,7 +14,7 @@ func TestNewHTTPServerConfiguration(t *testing.T) {
 		},
 	}
 
-	server := newHTTPServer(cfg)
+	server := newHTTPServer(cfg, fakeDatabasePinger{})
 
 	if server.Addr != ":8080" {
 		t.Errorf("expected address :8080, got %q", server.Addr)
