@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/raoamogh/hireos/internal/platform/config"
+	"github.com/raoamogh/hireos/internal/platform/database"
 	"github.com/raoamogh/hireos/internal/platform/logger"
 )
 
@@ -42,8 +43,21 @@ func run() error {
 		os.Interrupt,
 		syscall.SIGTERM,
 	)
-
 	defer stop()
+
+	dbCtx, cancelDB := context.WithTimeout(ctx, 5*time.Second)
+
+	pool, err := database.NewPool(dbCtx, cfg.Postgres)
+	cancelDB()
+
+	if err != nil {
+		log.Error("PostgreSQL connection failed", "error", err)
+		return fmt.Errorf("initialize PostgreSQL connection pool: %w", err)
+	}
+
+	defer pool.Close()
+
+	log.Info("PostgreSQL connection pool initialized")
 
 	if err := serve(ctx, cfg, log); err != nil {
 		log.Error("API server failed", "error", err)
