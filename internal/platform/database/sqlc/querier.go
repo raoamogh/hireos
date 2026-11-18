@@ -11,7 +11,20 @@ import (
 )
 
 type Querier interface {
+	// Consume a token only if it is outstanding and unexpired.
+	// The caller must execute this in the same transaction as the
+	// business operation authorized by the token.
+	ConsumeUserActionToken(ctx context.Context, arg ConsumeUserActionTokenParams) (ConsumeUserActionTokenRow, error)
+	// Persist only the token hash, never the raw token.
+	CreateUserActionToken(ctx context.Context, arg CreateUserActionTokenParams) (UserActionToken, error)
 	GetOrganizationByID(ctx context.Context, id pgtype.UUID) (Organization, error)
+	// Invalidate all previously outstanding tokens for this user and purpose.
+	// This also invalidates expired tokens that have not been consumed.
+	// The caller must execute this inside the same transaction as token creation.
+	InvalidateOutstandingUserActionTokens(ctx context.Context, arg InvalidateOutstandingUserActionTokensParams) error
+	// Lock the canonical user row while issuing an action token.
+	// The caller must execute this inside a transaction.
+	LockUserForActionToken(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
 }
 
 var _ Querier = (*Queries)(nil)

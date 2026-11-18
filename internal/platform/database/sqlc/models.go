@@ -78,13 +78,57 @@ type RolePermission struct {
 	CreatedAt    pgtype.Timestamptz
 }
 
+type Session struct {
+	ID         pgtype.UUID
+	UserID     pgtype.UUID
+	TokenHash  []byte
+	CreatedAt  pgtype.Timestamptz
+	LastSeenAt pgtype.Timestamptz
+	ExpiresAt  pgtype.Timestamptz
+	RevokedAt  pgtype.Timestamptz
+}
+
+type SessionTokenHistory struct {
+	TokenHash []byte
+	SessionID pgtype.UUID
+	RotatedAt pgtype.Timestamptz
+}
+
 type User struct {
 	ID              pgtype.UUID
 	Email           string
-	PasswordHash    string
 	DisplayName     string
 	Status          string
 	EmailVerifiedAt pgtype.Timestamptz
 	CreatedAt       pgtype.Timestamptz
 	UpdatedAt       pgtype.Timestamptz
+}
+
+type UserActionToken struct {
+	ID            pgtype.UUID
+	UserID        pgtype.UUID
+	Purpose       string
+	TokenHash     []byte
+	ExpiresAt     pgtype.Timestamptz
+	ConsumedAt    pgtype.Timestamptz
+	InvalidatedAt pgtype.Timestamptz
+	CreatedAt     pgtype.Timestamptz
+}
+
+type UserAuthIdentity struct {
+	ID                  pgtype.UUID
+	UserID              pgtype.UUID
+	Provider            string
+	Issuer              string
+	Subject             string
+	CreatedAt           pgtype.Timestamptz
+	LastAuthenticatedAt pgtype.Timestamptz
+}
+
+type UserPasswordCredential struct {
+	UserID            pgtype.UUID
+	PasswordHash      string
+	PasswordChangedAt pgtype.Timestamptz
+	CreatedAt         pgtype.Timestamptz
+	UpdatedAt         pgtype.Timestamptz
 }
