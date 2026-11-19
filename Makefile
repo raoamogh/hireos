@@ -4,7 +4,7 @@ GO ?= go
 DOCKER_COMPOSE ?= docker compose
 SQLC ?= sqlc
 
-.PHONY: help test build fmt vet sqlc-generate \
+.PHONY: help test test-integration build fmt vet sqlc-generate \
         migrate-up migrate-down migrate-version \
         infra-up infra-down
 
@@ -18,6 +18,11 @@ help: ## Show available development commands
 
 test: ## Run all Go tests
 	$(GO) test ./...
+
+test-integration: ## Run PostgreSQL integration tests against hireos_test
+	@test -f .env || (echo "Error: .env file not found."; exit 1)
+	@set -a && . ./.env && set +a && \
+		POSTGRES_DB=hireos_test $(GO) test -count=1 -tags=integration ./internal/identity/postgres/...
 
 build: ## Compile all Go packages
 	$(GO) build ./...
