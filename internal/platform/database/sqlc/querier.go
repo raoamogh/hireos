@@ -25,6 +25,12 @@ type Querier interface {
 	// Lock the canonical user row while issuing an action token.
 	// The caller must execute this inside a transaction.
 	LockUserForActionToken(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
+	// Mark a user's email as verified.
+	// The caller must execute this inside the same transaction as token consumption.
+	MarkUserEmailVerified(ctx context.Context, id pgtype.UUID) (int64, error)
+	// Update the password credential after successful password-reset token consumption.
+	// The caller must execute this inside the same transaction as token consumption.
+	UpdateUserPasswordCredential(ctx context.Context, arg UpdateUserPasswordCredentialParams) (int64, error)
 }
 
 var _ Querier = (*Queries)(nil)
